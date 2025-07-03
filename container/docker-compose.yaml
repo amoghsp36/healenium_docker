@@ -1,18 +1,19 @@
 version: "3.8"
 
 services:
-  mongodb:
-    image: mongo:7.0
-    container_name: healenium-mongodb
+  mysql:
+    image: mysql:8.0
+    container_name: healenium-mysql
     ports:
-      - "27017:27017"
+      - "3306:3306"
     restart: always
     volumes:
-      - mongodb_data:/data/db
+      - mysql_data:/var/lib/mysql
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=healenium_user
-      - MONGO_INITDB_ROOT_PASSWORD=mysecretpassword
-      - MONGO_INITDB_DATABASE=healenium
+      - MYSQL_ROOT_PASSWORD=mysecretpassword
+      - MYSQL_DATABASE=healenium
+      - MYSQL_USER=healenium_user
+      - MYSQL_PASSWORD=mysecretpassword
     networks:
       - healenium
 
@@ -22,7 +23,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - MONGO_URI=mongodb://healenium_user:mysecretpassword@mongodb:27017/healenium
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/healenium?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=healenium_user
+      - SPRING_DATASOURCE_PASSWORD=mysecretpassword
       - KEY_SELECTOR_URL=false
       - COLLECT_METRICS=true
       - HLM_LOG_LEVEL=info
@@ -32,7 +35,7 @@ services:
     networks:
       - healenium
     depends_on:
-      - mongodb
+      - mysql
 
   selector-imitator:
     image: healenium/hlm-selector-imitator:1.4
@@ -46,7 +49,7 @@ services:
       - healenium
 
 volumes:
-  mongodb_data:
+  mysql_data:
     driver: local
 
 networks:
