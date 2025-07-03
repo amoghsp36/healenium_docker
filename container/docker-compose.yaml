@@ -1,18 +1,18 @@
 version: "3.8"
 
 services:
-  postgres-db:
-    image: postgres:15.5-alpine
-    container_name: postgres-db
+  mongodb:
+    image: mongo:7.0
+    container_name: healenium-mongodb
     ports:
-      - "5430:5432"
+      - "27017:27017"
     restart: always
     volumes:
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mongodb_data:/data/db
     environment:
-      - POSTGRES_DB=healenium
-      - POSTGRES_USER=healenium_user
-      - POSTGRES_PASSWORD=mysecretpassword
+      - MONGO_INITDB_ROOT_USERNAME=healenium_user
+      - MONGO_INITDB_ROOT_PASSWORD=mysecretpassword
+      - MONGO_INITDB_DATABASE=healenium
     networks:
       - healenium
 
@@ -22,12 +22,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/healenium?currentSchema=healenium
-      - SPRING_POSTGRES_DB=healenium
-      - SPRING_POSTGRES_SCHEMA=healenium
-      - SPRING_POSTGRES_USER=healenium_user
-      - SPRING_POSTGRES_PASSWORD=mysecretpassword
-      - SPRING_POSTGRES_DB_HOST=postgres-db
+      - MONGO_URI=mongodb://healenium_user:mysecretpassword@mongodb:27017/healenium
       - KEY_SELECTOR_URL=false
       - COLLECT_METRICS=true
       - HLM_LOG_LEVEL=info
@@ -37,7 +32,7 @@ services:
     networks:
       - healenium
     depends_on:
-      - postgres-db
+      - mongodb
 
   selector-imitator:
     image: healenium/hlm-selector-imitator:1.4
@@ -49,6 +44,10 @@ services:
       - healenium
     depends_on:
       - healenium
+
+volumes:
+  mongodb_data:
+    driver: local
 
 networks:
   healenium:
